@@ -1,0 +1,530 @@
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- States
+local currentTab = "Murderer"
+local m_aimbot = false
+local s_aimbot = false
+local m_speed = false
+local s_speed = false
+local speedValue = 32
+local noclip = false
+local infJump = false
+local espEnabled = false
+
+local selectedPlayerForTP = nil
+local ARCADE_FONT = Enum.Font.Arcade
+
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "PrisVisuaLsMM2Gui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Toggle Button ("G" - Bright & Visible)
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Name = "ToggleMenuBtn"
+toggleBtn.Size = UDim2.new(0, 54, 0, 54)
+toggleBtn.Position = UDim2.new(0, 12, 0.5, -27)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(35, 12, 12)
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.Text = "G"
+toggleBtn.TextSize = 34
+toggleBtn.Font = ARCADE_FONT
+toggleBtn.AutoButtonColor = false
+toggleBtn.Parent = screenGui
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 12)
+btnCorner.Parent = toggleBtn
+
+local btnStroke = Instance.new("UIStroke")
+btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+btnStroke.Color = Color3.fromRGB(231, 76, 60)
+btnStroke.Thickness = 2.5
+btnStroke.Parent = toggleBtn
+
+-- Main Frame (PrisVisuaLs)
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 270, 0, 390)
+mainFrame.Position = UDim2.new(0.5, -135, 0.5, -220)
+mainFrame.BackgroundColor3 = Color3.fromRGB(18, 10, 10)
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = false
+mainFrame.ClipsDescendants = false
+mainFrame.Parent = screenGui
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 14)
+frameCorner.Parent = mainFrame
+
+local frameStroke = Instance.new("UIStroke")
+frameStroke.Color = Color3.fromRGB(231, 76, 60)
+frameStroke.Thickness = 2
+frameStroke.Parent = mainFrame
+
+-- Title & Subtitle
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 26)
+title.Position = UDim2.new(0, 0, 0, 6)
+title.BackgroundTransparency = 1
+title.Text = "PrisVisuaLs"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 22
+title.Font = ARCADE_FONT
+title.Parent = mainFrame
+
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(1, 0, 0, 16)
+subtitle.Position = UDim2.new(0, 0, 0, 30)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "Murder Mystery 2"
+subtitle.TextColor3 = Color3.fromRGB(180, 80, 80)
+subtitle.TextSize = 11
+subtitle.Font = ARCADE_FONT
+subtitle.Parent = mainFrame
+
+-- Tabs Container
+local tabContainer = Instance.new("Frame")
+tabContainer.Size = UDim2.new(1, -20, 0, 28)
+tabContainer.Position = UDim2.new(0, 10, 0, 52)
+tabContainer.BackgroundTransparency = 1
+tabContainer.Parent = mainFrame
+
+local murderTabBtn = Instance.new("TextButton")
+murderTabBtn.Size = UDim2.new(0.48, 0, 1, 0)
+murderTabBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+murderTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+murderTabBtn.Text = "MURDERER"
+murderTabBtn.TextSize = 12
+murderTabBtn.Font = ARCADE_FONT
+murderTabBtn.Parent = tabContainer
+
+local mTabCorner = Instance.new("UICorner")
+mTabCorner.CornerRadius = UDim.new(0, 6)
+mTabCorner.Parent = murderTabBtn
+
+local sheriffTabBtn = Instance.new("TextButton")
+sheriffTabBtn.Size = UDim2.new(0.48, 0, 1, 0)
+sheriffTabBtn.Position = UDim2.new(0.52, 0, 0, 0)
+sheriffTabBtn.BackgroundColor3 = Color3.fromRGB(35, 20, 20)
+sheriffTabBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+sheriffTabBtn.Text = "SHERIFF"
+sheriffTabBtn.TextSize = 12
+sheriffTabBtn.Font = ARCADE_FONT
+sheriffTabBtn.Parent = tabContainer
+
+local sTabCorner = Instance.new("UICorner")
+sTabCorner.CornerRadius = UDim.new(0, 6)
+sTabCorner.Parent = sheriffTabBtn
+
+-- Tab Frames
+local murderFrame = Instance.new("Frame")
+murderFrame.Size = UDim2.new(1, -20, 1, -95)
+murderFrame.Position = UDim2.new(0, 10, 0, 88)
+murderFrame.BackgroundTransparency = 1
+murderFrame.Visible = true
+murderFrame.Parent = mainFrame
+
+local sheriffFrame = Instance.new("Frame")
+sheriffFrame.Size = UDim2.new(1, -20, 1, -95)
+sheriffFrame.Position = UDim2.new(0, 10, 0, 88)
+sheriffFrame.BackgroundTransparency = 1
+sheriffFrame.Visible = false
+sheriffFrame.Parent = mainFrame
+
+-- Toggle Menu
+toggleBtn.MouseButton1Click:Connect(function()
+	mainFrame.Visible = not mainFrame.Visible
+end)
+
+-- Switch Tabs
+murderTabBtn.MouseButton1Click:Connect(function()
+	currentTab = "Murderer"
+	murderFrame.Visible = true
+	sheriffFrame.Visible = false
+	murderTabBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+	murderTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	sheriffTabBtn.BackgroundColor3 = Color3.fromRGB(35, 20, 20)
+	sheriffTabBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+end)
+
+sheriffTabBtn.MouseButton1Click:Connect(function()
+	currentTab = "Sheriff"
+	murderFrame.Visible = false
+	sheriffFrame.Visible = true
+	sheriffTabBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
+	sheriffTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	murderTabBtn.BackgroundColor3 = Color3.fromRGB(35, 20, 20)
+	murderTabBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+end)
+
+-- Toggle Component
+local function createToggle(parent, name, yPos, callback)
+	local container = Instance.new("Frame")
+	container.Size = UDim2.new(1, 0, 0, 28)
+	container.Position = UDim2.new(0, 0, 0, yPos)
+	container.BackgroundColor3 = Color3.fromRGB(26, 14, 14)
+	container.Parent = parent
+
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, 6)
+	c.Parent = container
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -50, 1, 0)
+	label.Position = UDim2.new(0, 8, 0, 0)
+	label.BackgroundTransparency = 1
+	label.Text = name
+	label.TextColor3 = Color3.fromRGB(200, 180, 180)
+	label.TextSize = 12
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Font = ARCADE_FONT
+	label.Parent = container
+
+	local switchBg = Instance.new("Frame")
+	switchBg.Size = UDim2.new(0, 36, 0, 16)
+	switchBg.Position = UDim2.new(1, -42, 0.5, -8)
+	switchBg.BackgroundColor3 = Color3.fromRGB(35, 20, 20)
+	switchBg.Parent = container
+
+	local sc = Instance.new("UICorner")
+	sc.CornerRadius = UDim.new(1, 0)
+	sc.Parent = switchBg
+
+	local switchDot = Instance.new("Frame")
+	switchDot.Size = UDim2.new(0, 12, 0, 12)
+	switchDot.Position = UDim2.new(0, 2, 0.5, -6)
+	switchDot.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
+	switchDot.Parent = switchBg
+
+	local dc = Instance.new("UICorner")
+	dc.CornerRadius = UDim.new(1, 0)
+	dc.Parent = switchDot
+
+	local clickBtn = Instance.new("TextButton")
+	clickBtn.Size = UDim2.new(1, 0, 1, 0)
+	clickBtn.BackgroundTransparency = 1
+	clickBtn.Text = ""
+	clickBtn.Parent = container
+
+	local state = false
+	clickBtn.MouseButton1Click:Connect(function()
+		state = not state
+		if state then
+			TweenService:Create(switchDot, TweenInfo.new(0.2), {
+				Position = UDim2.new(1, -14, 0.5, -6),
+				BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+			}):Play()
+		else
+			TweenService:Create(switchDot, TweenInfo.new(0.2), {
+				Position = UDim2.new(0, 2, 0.5, -6),
+				BackgroundColor3 = Color3.fromRGB(231, 76, 60)
+			}):Play()
+		end
+		callback(state)
+	end)
+end
+
+-- Speed Control Component (Infinite Range)
+local function createSpeedControl(parent, yPos)
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(1, 0, 0, 28)
+	frame.Position = UDim2.new(0, 0, 0, yPos)
+	frame.BackgroundColor3 = Color3.fromRGB(26, 14, 14)
+	frame.Parent = parent
+
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, 6)
+	c.Parent = frame
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(0, 110, 1, 0)
+	label.Position = UDim2.new(0, 8, 0, 0)
+	label.BackgroundTransparency = 1
+	label.Text = "Speed: " .. speedValue
+	label.TextColor3 = Color3.fromRGB(200, 180, 180)
+	label.TextSize = 11
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Font = ARCADE_FONT
+	label.Parent = frame
+
+	local btnMinus = Instance.new("TextButton")
+	btnMinus.Size = UDim2.new(0, 24, 0, 18)
+	btnMinus.Position = UDim2.new(1, -54, 0.5, -9)
+	btnMinus.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
+	btnMinus.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btnMinus.Text = "-"
+	btnMinus.TextSize = 14
+	btnMinus.Font = ARCADE_FONT
+	btnMinus.Parent = frame
+
+	local btnPlus = Instance.new("TextButton")
+	btnPlus.Size = UDim2.new(0, 24, 0, 18)
+	btnPlus.Position = UDim2.new(1, -26, 0.5, -9)
+	btnPlus.BackgroundColor3 = Color3.fromRGB(40, 150, 40)
+	btnPlus.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btnPlus.Text = "+"
+	btnPlus.TextSize = 14
+	btnPlus.Font = ARCADE_FONT
+	btnPlus.Parent = frame
+
+	btnMinus.MouseButton1Click:Connect(function()
+		speedValue = math.max(16, speedValue - 10)
+		label.Text = "Speed: " .. speedValue
+	end)
+
+	btnPlus.MouseButton1Click:Connect(function()
+		speedValue = speedValue + 20
+		label.Text = "Speed: " .. speedValue
+	end)
+end
+
+-- Teleport Component
+local function createTeleportControls(parent, yPos)
+	local selectBtn = Instance.new("TextButton")
+	selectBtn.Size = UDim2.new(0.58, -4, 0, 26)
+	selectBtn.Position = UDim2.new(0, 0, 0, yPos)
+	selectBtn.BackgroundColor3 = Color3.fromRGB(35, 20, 20)
+	selectBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	selectBtn.Text = "Select Player"
+	selectBtn.TextSize = 10
+	selectBtn.Font = ARCADE_FONT
+	selectBtn.Parent = parent
+
+	local sc = Instance.new("UICorner")
+	sc.CornerRadius = UDim.new(0, 6)
+	sc.Parent = selectBtn
+
+	local tpBtn = Instance.new("TextButton")
+	tpBtn.Size = UDim2.new(0.42, 0, 0, 26)
+	tpBtn.Position = UDim2.new(0.58, 4, 0, yPos)
+	tpBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+	tpBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	tpBtn.Text = "TELEPORT"
+	tpBtn.TextSize = 10
+	tpBtn.Font = ARCADE_FONT
+	tpBtn.Parent = parent
+
+	local tc = Instance.new("UICorner")
+	tc.CornerRadius = UDim.new(0, 6)
+	tc.Parent = tpBtn
+
+	local dropdown = Instance.new("ScrollingFrame")
+	dropdown.Size = UDim2.new(1, 0, 0, 95)
+	dropdown.Position = UDim2.new(0, 0, 0, yPos + 30)
+	dropdown.BackgroundColor3 = Color3.fromRGB(22, 12, 12)
+	dropdown.Visible = false
+	dropdown.CanvasSize = UDim2.new(0, 0, 0, 0)
+	dropdown.ZIndex = 5
+	dropdown.Parent = parent
+
+	local dc = Instance.new("UICorner")
+	dc.CornerRadius = UDim.new(0, 6)
+	dc.Parent = dropdown
+
+	selectBtn.MouseButton1Click:Connect(function()
+		dropdown.Visible = not dropdown.Visible
+		if dropdown.Visible then
+			for _, child in ipairs(dropdown:GetChildren()) do
+				if child:IsA("TextButton") then child:Destroy() end
+			end
+			local offset = 4
+			for _, p in ipairs(Players:GetPlayers()) do
+				if p ~= LocalPlayer then
+					local pb = Instance.new("TextButton")
+					pb.Size = UDim2.new(1, -8, 0, 22)
+					pb.Position = UDim2.new(0, 4, 0, offset)
+					pb.BackgroundColor3 = Color3.fromRGB(40, 20, 20)
+					pb.TextColor3 = Color3.fromRGB(255, 255, 255)
+					pb.Text = p.Name
+					pb.TextSize = 11
+					pb.Font = ARCADE_FONT
+					pb.ZIndex = 6
+					pb.Parent = dropdown
+
+					local pbc = Instance.new("UICorner")
+					pbc.CornerRadius = UDim.new(0, 4)
+					pbc.Parent = pb
+
+					pb.MouseButton1Click:Connect(function()
+						selectedPlayerForTP = p
+						selectBtn.Text = p.Name
+						dropdown.Visible = false
+					end)
+					offset = offset + 26
+				end
+			end
+			dropdown.CanvasSize = UDim2.new(0, 0, 0, offset)
+		end
+	end)
+
+	tpBtn.MouseButton1Click:Connect(function()
+		if selectedPlayerForTP and selectedPlayerForTP.Character and selectedPlayerForTP.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+			LocalPlayer.Character.HumanoidRootPart.CFrame = selectedPlayerForTP.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -2)
+		end
+	end)
+end
+
+-- POPULATE MURDERER TAB
+createToggle(murderFrame, "Aimbot -> Sheriff", 0, function(s) m_aimbot = s end)
+createToggle(murderFrame, "Speedhack", 32, function(s) m_speed = s end)
+createSpeedControl(murderFrame, 64)
+createToggle(murderFrame, "No-Clip", 96, function(s) noclip = s end)
+createToggle(murderFrame, "Infinity Jump", 128, function(s) infJump = s end)
+createToggle(murderFrame, "Early Player ESP", 160, function(s) espEnabled = s end)
+
+local killAllBtn = Instance.new("TextButton")
+killAllBtn.Size = UDim2.new(1, 0, 0, 28)
+killAllBtn.Position = UDim2.new(0, 0, 0, 192)
+killAllBtn.BackgroundColor3 = Color3.fromRGB(220, 20, 20)
+killAllBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+killAllBtn.Text = "KILL ALL"
+killAllBtn.TextSize = 12
+killAllBtn.Font = ARCADE_FONT
+killAllBtn.Parent = murderFrame
+
+local kc = Instance.new("UICorner")
+kc.CornerRadius = UDim.new(0, 6)
+kc.Parent = killAllBtn
+
+createTeleportControls(murderFrame, 226)
+
+-- POPULATE SHERIFF TAB
+createToggle(sheriffFrame, "Aimbot -> Murderer", 0, function(s) s_aimbot = s end)
+createToggle(sheriffFrame, "Speedhack", 32, function(s) s_speed = s end)
+createSpeedControl(sheriffFrame, 64)
+createToggle(sheriffFrame, "No-Clip", 96, function(s) noclip = s end)
+createToggle(sheriffFrame, "Infinity Jump", 128, function(s) infJump = s end)
+createToggle(sheriffFrame, "Early Player ESP", 160, function(s) espEnabled = s end)
+createTeleportControls(sheriffFrame, 198)
+
+-- ROLE DETECTION (EARLY SCAN)
+local function getEarlyRole(p)
+	if not p then return "Innocent" end
+	local bp = p:FindFirstChild("Backpack")
+	local char = p.Character
+	local function check(c)
+		if not c then return nil end
+		for _, item in ipairs(c:GetChildren()) do
+			if item:IsA("Tool") then
+				local n = item.Name:lower()
+				if n:find("knife") or n:find("cuchillo") then return "Murderer" end
+				if n:find("gun") or n:find("revolver") then return "Sheriff" end
+			end
+		end
+		return nil
+	end
+	return check(char) or check(bp) or "Innocent"
+end
+
+-- ESP HIGHLIGHTS
+local highlights = {}
+RunService.RenderStepped:Connect(function()
+	for _, p in ipairs(Players:GetPlayers()) do
+		if p ~= LocalPlayer then
+			if espEnabled and p.Character then
+				local hl = highlights[p]
+				if not hl then
+					hl = Instance.new("Highlight")
+					hl.Parent = p.Character
+					highlights[p] = hl
+				end
+				local role = getEarlyRole(p)
+				if role == "Murderer" then
+					hl.FillColor = Color3.fromRGB(231, 76, 60)
+				elseif role == "Sheriff" then
+					hl.FillColor = Color3.fromRGB(0, 170, 255)
+				else
+					hl.FillColor = Color3.fromRGB(46, 204, 113)
+				end
+				hl.Enabled = true
+			else
+				if highlights[p] then
+					highlights[p]:Destroy()
+					highlights[p] = nil
+				end
+			end
+		end
+	end
+end)
+
+-- KILL ALL LOGIC
+killAllBtn.MouseButton1Click:Connect(function()
+	if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+	local myHrp = LocalPlayer.Character.HumanoidRootPart
+	local bp = LocalPlayer:FindFirstChild("Backpack")
+	if bp then
+		for _, tool in ipairs(bp:GetChildren()) do
+			if tool:IsA("Tool") and (tool.Name:lower():find("knife") or tool.Name:lower():find("cuchillo")) then
+				tool.Parent = LocalPlayer.Character
+				break
+			end
+		end
+	end
+	task.spawn(function()
+		for _, p in ipairs(Players:GetPlayers()) do
+			if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+				p.Character.HumanoidRootPart.CFrame = myHrp.CFrame * CFrame.new(0, 0, -3)
+				local knife = LocalPlayer.Character:FindFirstChildOfClass("Tool")
+				if knife then knife:Activate() end
+				task.wait(0.04)
+			end
+		end
+	end)
+end)
+
+-- GET AIMBOT TARGET
+local function getTargetPlayer(roleToFind)
+	for _, p in ipairs(Players:GetPlayers()) do
+		if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+			if getEarlyRole(p) == roleToFind then
+				return p.Character.Head
+			end
+		end
+	end
+	return nil
+end
+
+-- RENDERSTEPPED LOOP (AIMBOT & NOCLIP)
+RunService.RenderStepped:Connect(function()
+	if m_aimbot then
+		local th = getTargetPlayer("Sheriff")
+		if th then Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, th.Position), 0.3) end
+	end
+	if s_aimbot then
+		local th = getTargetPlayer("Murderer")
+		if th then Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, th.Position), 0.3) end
+	end
+	if noclip and LocalPlayer.Character then
+		for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+			if part:IsA("BasePart") then part.CanCollide = false end
+		end
+	end
+end)
+
+-- HEARTBEAT LOOP (SPEEDHACK)
+RunService.Heartbeat:Connect(function()
+	if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+		local hum = LocalPlayer.Character.Humanoid
+		if m_speed or s_speed then
+			hum.WalkSpeed = speedValue
+		else
+			hum.WalkSpeed = 16
+		end
+	end
+end)
+
+-- INFINITY JUMP
+UserInputService.JumpRequest:Connect(function()
+	if infJump and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+		LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+end)
